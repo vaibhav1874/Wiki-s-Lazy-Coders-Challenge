@@ -197,6 +197,67 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
+  void _showDirectAccessTokenDialog() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.surface,
+        title: const Text('Enter Access Token'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Paste the Access Token provided by Wikimedia for your consumer:',
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              maxLines: 2,
+              decoration: const InputDecoration(
+                labelText: 'Access Token',
+                hintText: 'Paste token here',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _handleDirectAccessToken(controller.text);
+            },
+            child: const Text('Connect Token'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleDirectAccessToken(String token) async {
+    final clean = token.trim();
+    if (clean.isEmpty) return;
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      await _authService.saveDirectAccessToken(clean);
+      await _checkAuthState();
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.toString();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -396,6 +457,12 @@ class _AuthScreenState extends State<AuthScreen> {
                   onPressed: _startOAuth,
                 ),
                 const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.key_rounded),
+                  label: const Text('Paste Access Token directly'),
+                  onPressed: _showDirectAccessTokenDialog,
+                ),
+                const SizedBox(height: 8),
                 TextButton(
                   onPressed: _showManualCodeDialog,
                   child: const Text(

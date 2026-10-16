@@ -116,13 +116,41 @@ class WikimediaAuthService {
   /// Launches the device browser to authenticate with Wikimedia Commons.
   Future<void> startOAuthFlow() async {
     final uri = await buildAuthorizationUri();
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      throw const WikimediaAuthFailure(
-        'Could not launch browser for Wikimedia authorization.',
-      );
+    try {
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched) {
+        await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+      }
+    } catch (e) {
+      // Direct attempt
+      try {
+        await launchUrl(uri, mode: LaunchMode.platformDefault);
+      } catch (inner) {
+        throw WikimediaAuthFailure(
+          'Could not launch browser: $inner. Please enter your Access Token or Authorization Code directly.',
+        );
+      }
     }
+  }
+
+  /// Directly saves a pre-generated or owner-only access token.
+  Future<OAuthTokens> saveDirectAccessToken(String token) async {
+    final cleanToken = token.trim();
+    if (cleanToken.isEmpty) {
+      throw const WikimediaAuthFailure('Access token cannot be empty.');
+    }
+    final tokens = OAuthTokens(
+      accessToken: cleanToken,
+      refreshToken: null,
+      expiresAt: DateTime.now().add(const Duration(days: 365)),
+      tokenType: 'Bearer',
+    );
+    await _storage.write(
+      key: ApiConstants.keyAccessToken,
+      value: jsonEncode(tokens.toMap()),
+    );
+    await fetchAndSaveUserProfile(cleanToken);
+    return tokens;
   }
 
   /// Handles redirect callback containing authorization code.

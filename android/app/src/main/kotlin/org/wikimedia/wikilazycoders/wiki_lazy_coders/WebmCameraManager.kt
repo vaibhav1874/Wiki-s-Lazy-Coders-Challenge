@@ -6,17 +6,20 @@ import android.graphics.ImageFormat
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
 import android.hardware.camera2.params.StreamConfigurationMap
+import android.media.ImageReader
 import android.media.MediaCodecInfo
 import android.media.MediaCodecList
 import android.media.MediaRecorder
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.Looper
 import android.util.Log
 import android.util.Size
 import android.view.Surface
 import io.flutter.view.TextureRegistry
 import java.io.File
+import java.io.FileOutputStream
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 
@@ -45,6 +48,7 @@ class WebmCameraManager(
 
     private var surfaceTextureEntry: TextureRegistry.SurfaceTextureEntry? = null
     private var previewSurface: Surface? = null
+    private var imageReader: ImageReader? = null
 
     private var mediaRecorder: MediaRecorder? = null
     private var recordingSurface: Surface? = null
@@ -191,47 +195,65 @@ class WebmCameraManager(
         previewWidth = requestedWidth
         previewHeight = requestedHeight
 
-        backgroundHandler?.post {
+        // Flutter's TextureRegistry requires creation on the Android Main/UI thread
+        Handler(Looper.getMainLooper()).post {
             try {
-                if (!cameraOpenCloseLock.tryAcquire(CAMERA_LOCK_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
-                    onError("Timeout acquiring camera lock.")
-                    return@post
-                }
+                previewSurface?.release()
+                previewSurface = null
+                try {
+                    surfaceTextureEntry?.release()
+                } catch (ignored: Exception) {}
 
-                // Clean up any existing session
-                closeCameraSilently()
-
-                // Register Flutter Texture
                 val entry = textureRegistry.createSurfaceTexture()
                 surfaceTextureEntry = entry
+                val textureId = entry.id()
                 val surfaceTexture = entry.surfaceTexture()
                 surfaceTexture.setDefaultBufferSize(previewWidth, previewHeight)
-                previewSurface = Surface(surfaceTexture)
+                val surface = Surface(surfaceTexture)
+                previewSurface = surface
 
-                cameraManager.openCamera(targetCameraId, object : CameraDevice.StateCallback() {
-                    override fun onOpened(camera: CameraDevice) {
-                        cameraDevice = camera
+                backgroundHandler?.post {
+                    try {
+                        if (!cameraOpenCloseLock.tryAcquire(CAMERA_LOCK_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                            onError("Timeout acquiring camera lock.")
+                            return@post
+                        }
+
+                        try {
+                            captureSession?.close()
+                            captureSession = null
+                            cameraDevice?.close()
+                            cameraDevice = null
+                        } catch (ignored: Exception) {}
+
+                        cameraManager.openCamera(targetCameraId, object : CameraDevice.StateCallback() {
+                            override fun onOpened(camera: CameraDevice) {
+                                cameraDevice = camera
+                                cameraOpenCloseLock.release()
+                                createPreviewSession(textureId, onSuccess, onError)
+                            }
+
+                            override fun onDisconnected(camera: CameraDevice) {
+                                cameraOpenCloseLock.release()
+                                camera.close()
+                                cameraDevice = null
+                            }
+
+                            override fun onError(camera: CameraDevice, error: Int) {
+                                cameraOpenCloseLock.release()
+                                camera.close()
+                                cameraDevice = null
+                                onError("CameraDevice error code: $error")
+                            }
+                        }, backgroundHandler)
+
+                    } catch (e: Exception) {
                         cameraOpenCloseLock.release()
-                        createPreviewSession(onSuccess, onError)
+                        onError("Failed to open camera: ${e.message}")
                     }
-
-                    override fun onDisconnected(camera: CameraDevice) {
-                        cameraOpenCloseLock.release()
-                        camera.close()
-                        cameraDevice = null
-                    }
-
-                    override fun onError(camera: CameraDevice, error: Int) {
-                        cameraOpenCloseLock.release()
-                        camera.close()
-                        cameraDevice = null
-                        onError("CameraDevice error code: $error")
-                    }
-                }, backgroundHandler)
-
+                }
             } catch (e: Exception) {
-                cameraOpenCloseLock.release()
-                onError("Failed to open camera: ${e.message}")
+                onError("Failed to initialize camera texture on UI thread: ${e.message}")
             }
         }
     }
@@ -248,6 +270,7 @@ class WebmCameraManager(
     }
 
     private fun createPreviewSession(
+        textureId: Long,
         onSuccess: (Map<String, Any>) -> Unit,
         onError: (String) -> Unit
     ) {
@@ -261,6 +284,10 @@ class WebmCameraManager(
         }
 
         try {
+            val reader = ImageReader.newInstance(previewWidth, previewHeight, ImageFormat.JPEG, 2)
+            imageReader = reader
+            val sessionSurfaces = listOf(surface, reader.surface)
+
             previewRequestBuilder = camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
                 addTarget(surface)
                 set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
@@ -269,7 +296,7 @@ class WebmCameraManager(
             }
 
             camera.createCaptureSession(
-                listOf(surface),
+                sessionSurfaces,
                 object : CameraCaptureSession.StateCallback() {
                     override fun onConfigured(session: CameraCaptureSession) {
                         captureSession = session
@@ -277,10 +304,10 @@ class WebmCameraManager(
                             previewRequestBuilder?.let { builder ->
                                 session.setRepeatingRequest(builder.build(), null, backgroundHandler)
                             }
-                            val textureId = surfaceTextureEntry?.id() ?: -1L
+                            val idToReport = if (textureId != -1L) textureId else (surfaceTextureEntry?.id() ?: -1L)
                             onSuccess(
                                 mapOf(
-                                    "textureId" to textureId,
+                                    "textureId" to idToReport,
                                     "previewWidth" to previewWidth,
                                     "previewHeight" to previewHeight,
                                     "cameraId" to (currentCameraId ?: "")
@@ -451,7 +478,7 @@ class WebmCameraManager(
                 recordingSurface = null
 
                 // Restart preview only session
-                createPreviewSession({}, {})
+                createPreviewSession(surfaceTextureEntry?.id() ?: -1L, {}, {})
 
                 val path = currentRecordingPath ?: ""
                 val validation = WebmValidator.validate(path)
@@ -484,16 +511,83 @@ class WebmCameraManager(
         closeCameraSilently()
     }
 
+    fun takePhoto(
+        outputPath: String,
+        onSuccess: (String) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val camera = cameraDevice ?: run {
+            onError("Camera device is null")
+            return
+        }
+        val session = captureSession ?: run {
+            onError("Capture session is null")
+            return
+        }
+        val reader = imageReader ?: run {
+            onError("Image reader is not configured")
+            return
+        }
+
+        backgroundHandler?.post {
+            try {
+                reader.setOnImageAvailableListener({ r ->
+                    val image = r.acquireLatestImage() ?: return@setOnImageAvailableListener
+                    try {
+                        val buffer = image.planes[0].buffer
+                        val bytes = ByteArray(buffer.remaining())
+                        buffer.get(bytes)
+                        val file = File(outputPath)
+                        file.parentFile?.mkdirs()
+                        FileOutputStream(file).use { fos ->
+                            fos.write(bytes)
+                        }
+                        Handler(Looper.getMainLooper()).post {
+                            onSuccess(file.absolutePath)
+                        }
+                    } catch (e: Exception) {
+                        Handler(Looper.getMainLooper()).post {
+                            onError("Failed to save photo: ${e.message}")
+                        }
+                    } finally {
+                        image.close()
+                    }
+                }, backgroundHandler)
+
+                val captureBuilder = camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE).apply {
+                    addTarget(reader.surface)
+                    set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
+                    set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
+                    set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
+                }
+                session.capture(captureBuilder.build(), null, backgroundHandler)
+            } catch (e: Exception) {
+                Handler(Looper.getMainLooper()).post {
+                    onError("Still capture failed: ${e.message}")
+                }
+            }
+        }
+    }
+
     private fun closeCameraSilently() {
         try {
             captureSession?.close()
             captureSession = null
             cameraDevice?.close()
             cameraDevice = null
+            imageReader?.close()
+            imageReader = null
             previewSurface?.release()
             previewSurface = null
-            surfaceTextureEntry?.release()
+            val entryToRelease = surfaceTextureEntry
             surfaceTextureEntry = null
+            if (entryToRelease != null) {
+                Handler(Looper.getMainLooper()).post {
+                    try {
+                        entryToRelease.release()
+                    } catch (ignored: Exception) {}
+                }
+            }
         } catch (ignored: Exception) {}
     }
 

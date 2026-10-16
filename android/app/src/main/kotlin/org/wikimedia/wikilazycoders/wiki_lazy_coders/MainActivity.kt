@@ -152,6 +152,19 @@ class MainActivity : FlutterActivity() {
                     )
                 }
 
+                "takePhoto" -> {
+                    val outputPath = call.argument<String>("outputPath") ?: ""
+                    cameraManager?.takePhoto(
+                        outputPath = outputPath,
+                        onSuccess = { path ->
+                            result.success(path)
+                        },
+                        onError = { error ->
+                            result.error("TAKE_PHOTO_ERROR", error, null)
+                        }
+                    )
+                }
+
                 "validateWebm" -> {
                     val filePath = call.argument<String>("filePath") ?: ""
                     val validation = WebmValidator.validate(filePath)

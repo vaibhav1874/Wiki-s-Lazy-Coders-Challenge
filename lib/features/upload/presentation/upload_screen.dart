@@ -233,13 +233,31 @@ class _UploadScreenState extends State<UploadScreen> {
               const SizedBox(height: 16),
             ],
 
+            // Image preview if photo
+            if (widget.filePath.toLowerCase().endsWith('.jpg') ||
+                widget.filePath.toLowerCase().endsWith('.jpeg') ||
+                widget.filePath.toLowerCase().endsWith('.png')) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.file(
+                  File(widget.filePath),
+                  height: 160,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             // Title
             TextFormField(
               controller: _titleController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'File Name on Commons',
-                hintText: 'e.g. Birds_in_flight_Mumbai',
-                suffixText: '.webm',
+                hintText: 'e.g. Media_file_title',
+                suffixText: p.extension(widget.filePath).isNotEmpty
+                    ? p.extension(widget.filePath)
+                    : '.webm',
               ),
               validator: (val) {
                 if (val == null || val.trim().isEmpty) {

@@ -172,4 +172,27 @@ class NativeCameraService {
       );
     }
   }
+
+  /// Captures a high-resolution still photograph using Camera2 STILL_CAPTURE.
+  Future<String> takePhoto() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final photosDir = Directory(p.join(dir.path, 'photos'));
+      if (!await photosDir.exists()) {
+        await photosDir.create(recursive: true);
+      }
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final filePath = p.join(photosDir.path, 'IMG_$timestamp.jpg');
+
+      final res = await _channel.invokeMethod<String>('takePhoto', {
+        'outputPath': filePath,
+      });
+      return res ?? filePath;
+    } on PlatformException catch (e) {
+      throw CameraFailure(
+        'Failed to take photograph: ${e.message}',
+        code: e.code,
+      );
+    }
+  }
 }

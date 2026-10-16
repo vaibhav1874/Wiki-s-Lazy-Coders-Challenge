@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:wiki_lazy_coders/core/theme/app_theme.dart';
@@ -33,6 +34,10 @@ class _CameraScreenState extends State<CameraScreen>
   RecordingConfig _config = const RecordingConfig();
   Timer? _recordingTimer;
   int _recordingSeconds = 0;
+
+  bool _isFullScreen = true;
+  bool _isPhotoMode = false;
+  bool _isCapturingPhoto = false;
 
   @override
   void initState() {
@@ -162,6 +167,110 @@ class _CameraScreenState extends State<CameraScreen>
         );
       }
     }
+  }
+
+  Future<void> _takePhoto() async {
+    if (_isCapturingPhoto || _isRecording) return;
+    setState(() => _isCapturingPhoto = true);
+    try {
+      final photoPath = await _cameraService.takePhoto();
+      setState(() => _isCapturingPhoto = false);
+      if (mounted) {
+        _showPhotoSuccessSheet(photoPath);
+      }
+    } catch (e) {
+      setState(() => _isCapturingPhoto = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to capture photo: $e'),
+            backgroundColor: AppTheme.recordingRed,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showPhotoSuccessSheet(String filePath) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.check_circle,
+                    color: AppTheme.primaryAccent,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Photo Captured',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.file(
+                  File(filePath),
+                  height: 180,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.delete_outline),
+                      label: const Text('Discard'),
+                      onPressed: () {
+                        try {
+                          File(filePath).deleteSync();
+                        } catch (_) {}
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.cloud_upload_outlined),
+                      label: const Text('Upload to Commons'),
+                      onPressed: () {
+                        Navigator.pop(context);
+                        widget.onUploadRecording(filePath);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _showRecordingSuccessSheet(
@@ -305,13 +414,30 @@ class _CameraScreenState extends State<CameraScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Live Camera Preview using TextureRegistry
+          // Live Camera Preview using TextureRegistry with Fullscreen/Contain fitting
           if (_textureId != null)
-            Center(
-              child: AspectRatio(
-                aspectRatio: _config.width / _config.height,
-                child: Texture(textureId: _textureId!),
-              ),
+            Builder(
+              builder: (context) {
+                final isPortrait =
+                    MediaQuery.of(context).orientation == Orientation.portrait;
+                final previewW = isPortrait
+                    ? _config.height.toDouble()
+                    : _config.width.toDouble();
+                final previewH = isPortrait
+                    ? _config.width.toDouble()
+                    : _config.height.toDouble();
+
+                return SizedBox.expand(
+                  child: FittedBox(
+                    fit: _isFullScreen ? BoxFit.cover : BoxFit.contain,
+                    child: SizedBox(
+                      width: previewW,
+                      height: previewH,
+                      child: Texture(textureId: _textureId!),
+                    ),
+                  ),
+                );
+              },
             )
           else if (_isInitializing)
             const Center(
@@ -419,7 +545,17 @@ class _CameraScreenState extends State<CameraScreen>
                               });
                             },
                     ),
-                    const SizedBox(width: 8),
+                    // Fullscreen / Fit Toggle
+                    IconButton(
+                      icon: Icon(
+                        _isFullScreen ? Icons.fullscreen_exit : Icons.fullscreen,
+                        color: Colors.white,
+                      ),
+                      tooltip: _isFullScreen ? 'Fit 16:9' : 'Fill Screen',
+                      onPressed: () {
+                        setState(() => _isFullScreen = !_isFullScreen);
+                      },
+                    ),
                     // Camera Switch (Front/Back)
                     if (_cameras.length > 1)
                       IconButton(
@@ -482,84 +618,189 @@ class _CameraScreenState extends State<CameraScreen>
               ),
             ),
 
-          // Bottom Controls: Gallery Shortcut, Large Record Button, Settings
+          // Bottom Controls: Mode Selector & Shutter
           Positioned(
-            bottom: 30,
+            bottom: 24,
             left: 0,
             right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              crossAxisAlignment: CrossAxisAlignment.center,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Gallery shortcut
-                IconButton(
-                  iconSize: 32,
-                  icon: const Icon(
-                    Icons.photo_library_outlined,
-                    color: Colors.white70,
-                  ),
-                  onPressed: _isRecording
-                      ? null
-                      : widget.onNavigateToRecordings,
-                ),
-
-                // Main Circular Record Button
-                GestureDetector(
-                  onTap: () {
-                    if (_isRecording) {
-                      _stopRecording();
-                    } else {
-                      _startRecording();
-                    }
-                  },
-                  child: Container(
-                    width: 76,
-                    height: 76,
+                // Mode Switcher (VIDEO / PHOTO)
+                if (!_isRecording)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 18),
+                    padding: const EdgeInsets.all(3),
                     decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 4),
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.white24),
                     ),
-                    padding: const EdgeInsets.all(5),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
-                      decoration: BoxDecoration(
-                        color: AppTheme.recordingRed,
-                        borderRadius: BorderRadius.circular(
-                          _isRecording ? 10 : 36,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        GestureDetector(
+                          onTap: () => setState(() => _isPhotoMode = false),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 7,
+                            ),
+                            decoration: BoxDecoration(
+                              color: !_isPhotoMode
+                                  ? AppTheme.recordingRed
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: const Text(
+                              'VIDEO',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => setState(() => _isPhotoMode = true),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 7,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _isPhotoMode
+                                  ? AppTheme.primaryAccent
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: const Text(
+                              'PHOTO',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Gallery shortcut
+                    IconButton(
+                      iconSize: 32,
+                      icon: const Icon(
+                        Icons.photo_library_outlined,
+                        color: Colors.white70,
+                      ),
+                      onPressed: _isRecording
+                          ? null
+                          : widget.onNavigateToRecordings,
+                    ),
+
+                    // Main Action Shutter Button
+                    if (_isPhotoMode)
+                      GestureDetector(
+                        onTap: _isCapturingPhoto ? null : _takePhoto,
+                        child: Container(
+                          width: 76,
+                          height: 76,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 4),
+                          ),
+                          padding: const EdgeInsets.all(5),
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: _isCapturingPhoto
+                                ? const Padding(
+                                    padding: EdgeInsets.all(16),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 3,
+                                      color: Colors.black,
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.camera_alt,
+                                    color: Colors.black,
+                                    size: 28,
+                                  ),
+                          ),
+                        ),
+                      )
+                    else
+                      GestureDetector(
+                        onTap: () {
+                          if (_isRecording) {
+                            _stopRecording();
+                          } else {
+                            _startRecording();
+                          }
+                        },
+                        child: Container(
+                          width: 76,
+                          height: 76,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 4),
+                          ),
+                          padding: const EdgeInsets.all(5),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 250),
+                            decoration: BoxDecoration(
+                              color: AppTheme.recordingRed,
+                              borderRadius: BorderRadius.circular(
+                                _isRecording ? 10 : 36,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                ),
 
-                // Resolution picker shortcut
-                PopupMenuButton<ResolutionSize>(
-                  icon: const Icon(Icons.tune, color: Colors.white70, size: 28),
-                  enabled: !_isRecording,
-                  color: AppTheme.surfaceVariant,
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: ResolutionSize(width: 1920, height: 1080),
-                      child: Text('1080p (Full HD)'),
-                    ),
-                    const PopupMenuItem(
-                      value: ResolutionSize(width: 1280, height: 720),
-                      child: Text('720p (HD - Recommended)'),
-                    ),
-                    const PopupMenuItem(
-                      value: ResolutionSize(width: 854, height: 480),
-                      child: Text('480p (SD)'),
+                    // Resolution picker shortcut
+                    PopupMenuButton<ResolutionSize>(
+                      icon: const Icon(Icons.tune, color: Colors.white70, size: 28),
+                      enabled: !_isRecording,
+                      color: AppTheme.surfaceVariant,
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: ResolutionSize(width: 1920, height: 1080),
+                          child: Text('1080p (Full HD)'),
+                        ),
+                        const PopupMenuItem(
+                          value: ResolutionSize(width: 1280, height: 720),
+                          child: Text('720p (HD - Recommended)'),
+                        ),
+                        const PopupMenuItem(
+                          value: ResolutionSize(width: 854, height: 480),
+                          child: Text('480p (SD)'),
+                        ),
+                      ],
+                      onSelected: (res) {
+                        setState(() {
+                          _config = _config.copyWith(
+                            width: res.width,
+                            height: res.height,
+                          );
+                        });
+                        _initializeCamera();
+                      },
                     ),
                   ],
-                  onSelected: (res) {
-                    setState(() {
-                      _config = _config.copyWith(
-                        width: res.width,
-                        height: res.height,
-                      );
-                    });
-                    _initializeCamera();
-                  },
                 ),
               ],
             ),
