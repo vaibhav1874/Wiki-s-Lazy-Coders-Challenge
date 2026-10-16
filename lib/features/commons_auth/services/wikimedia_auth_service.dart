@@ -234,8 +234,34 @@ class WikimediaAuthService {
     return tokens;
   }
 
-  /// Queries user profile from MediaWiki Action API.
+  /// Queries user profile from MediaWiki Action API or OAuth profile endpoint.
   Future<WikimediaUser> fetchAndSaveUserProfile(String accessToken) async {
+    try {
+      final profileResponse = await _httpClient.get(
+        Uri.parse(ApiConstants.oauthProfileUrl),
+        headers: {
+          'User-Agent': ApiConstants.userAgent,
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
+      if (profileResponse.statusCode == 200) {
+        final data = jsonDecode(profileResponse.body) as Map<String, dynamic>;
+        final user = WikimediaUser(
+          id: data['sub'] is int
+              ? data['sub'] as int
+              : int.tryParse(data['sub']?.toString() ?? '0') ?? 0,
+          name: data['username']?.toString() ?? data['sub']?.toString() ?? 'Wikimedia User',
+          editCount: data['editcount'] as int? ?? 0,
+          groups: (data['groups'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+        );
+        await _storage.write(
+          key: ApiConstants.keyUsername,
+          value: jsonEncode(user.toMap()),
+        );
+        return user;
+      }
+    } catch (_) {}
+
     final uri = Uri.parse(ApiConstants.commonsApiUrl).replace(
       queryParameters: {
         'action': 'query',

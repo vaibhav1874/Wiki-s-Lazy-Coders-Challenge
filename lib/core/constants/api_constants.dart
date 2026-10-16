@@ -2,13 +2,13 @@ class ApiConstants {
   // MediaWiki Action API for Wikimedia Commons
   static const String commonsApiUrl = 'https://commons.wikimedia.org/w/api.php';
 
-  // Wikimedia OAuth 2.0 endpoints
+  // Wikimedia OAuth 2.0 endpoints (Meta-Wiki is the Central OAuth Provider for all Wikimedia wikis)
   static const String oauthAuthorizeUrl =
-      'https://commons.wikimedia.org/w/rest.php/oauth2/authorize';
+      'https://meta.wikimedia.org/w/rest.php/oauth2/authorize';
   static const String oauthTokenUrl =
-      'https://commons.wikimedia.org/w/rest.php/oauth2/access_token';
+      'https://meta.wikimedia.org/w/rest.php/oauth2/access_token';
   static const String oauthProfileUrl =
-      'https://commons.wikimedia.org/w/rest.php/oauth2/resource/profile';
+      'https://meta.wikimedia.org/w/rest.php/oauth2/resource/profile';
 
   // Mobile custom scheme redirect URI
   static const String defaultRedirectUri = 'wikilazycoders://oauth';
