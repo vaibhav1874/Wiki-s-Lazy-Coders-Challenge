@@ -181,7 +181,10 @@ class _AuthScreenState extends State<AuthScreen> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -213,7 +216,9 @@ class _AuthScreenState extends State<AuthScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryAccent))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppTheme.primaryAccent),
+            )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -229,7 +234,10 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                       child: Text(
                         _errorMessage!,
-                        style: const TextStyle(color: AppTheme.recordingRed, fontSize: 13),
+                        style: const TextStyle(
+                          color: AppTheme.recordingRed,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -264,7 +272,11 @@ class _AuthScreenState extends State<AuthScreen> {
                   child: Center(
                     child: Text(
                       _currentUser!.name.substring(0, 1).toUpperCase(),
-                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -278,17 +290,27 @@ class _AuthScreenState extends State<AuthScreen> {
                           Flexible(
                             child: Text(
                               _currentUser!.name,
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 6),
-                          const Icon(Icons.verified, color: AppTheme.primaryAccent, size: 18),
+                          const Icon(
+                            Icons.verified,
+                            color: AppTheme.primaryAccent,
+                            size: 18,
+                          ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Edits: ${_currentUser!.editCount}  •  ID: ${_currentUser!.id}',
-                        style: const TextStyle(color: AppTheme.textMuted, fontSize: 13),
+                        style: const TextStyle(
+                          color: AppTheme.textMuted,
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                   ),
@@ -298,16 +320,29 @@ class _AuthScreenState extends State<AuthScreen> {
             const Divider(height: 32, color: AppTheme.border),
             const Text(
               'Authentication Details',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+              ),
             ),
             const SizedBox(height: 8),
             _buildInfoRow('Provider', 'Wikimedia Commons OAuth 2.0 (PKCE)'),
-            _buildInfoRow('Token Status', _currentTokens!.isExpired ? 'Expired' : 'Active & Verified'),
-            _buildInfoRow('Storage', 'Android Keystore (EncryptedSharedPreferences)'),
+            _buildInfoRow(
+              'Token Status',
+              _currentTokens!.isExpired ? 'Expired' : 'Active & Verified',
+            ),
+            _buildInfoRow(
+              'Storage',
+              'Android Keystore (EncryptedSharedPreferences)',
+            ),
             const SizedBox(height: 24),
             OutlinedButton.icon(
               icon: const Icon(Icons.logout, color: AppTheme.recordingRed),
-              label: const Text('Disconnect Account', style: TextStyle(color: AppTheme.recordingRed)),
+              label: const Text(
+                'Disconnect Account',
+                style: TextStyle(color: AppTheme.recordingRed),
+              ),
               onPressed: _signOut,
             ),
           ],
@@ -331,7 +366,11 @@ class _AuthScreenState extends State<AuthScreen> {
                     color: AppTheme.primary.withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.lock_open_rounded, size: 48, color: AppTheme.primaryAccent),
+                  child: const Icon(
+                    Icons.lock_open_rounded,
+                    size: 48,
+                    color: AppTheme.primaryAccent,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 const Text(
@@ -344,7 +383,11 @@ class _AuthScreenState extends State<AuthScreen> {
                   'Authenticate securely via OAuth 2.0 authorization-code flow with PKCE. '
                   'Your Wikimedia password is never entered or stored in this application.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 13, height: 1.4),
+                  style: TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
@@ -355,7 +398,9 @@ class _AuthScreenState extends State<AuthScreen> {
                 const SizedBox(height: 12),
                 TextButton(
                   onPressed: _showManualCodeDialog,
-                  child: const Text('Have an Authorization Code? Enter manually'),
+                  child: const Text(
+                    'Have an Authorization Code? Enter manually',
+                  ),
                 ),
               ],
             ),
@@ -371,9 +416,19 @@ class _AuthScreenState extends State<AuthScreen> {
               children: [
                 const Row(
                   children: [
-                    Icon(Icons.info_outline, size: 18, color: AppTheme.textMuted),
+                    Icon(
+                      Icons.info_outline,
+                      size: 18,
+                      color: AppTheme.textMuted,
+                    ),
                     SizedBox(width: 8),
-                    Text('OAuth Consumer Setup', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    Text(
+                      'OAuth Consumer Setup',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -382,7 +437,11 @@ class _AuthScreenState extends State<AuthScreen> {
                   '• Client Type: Public (Native/Mobile)\n'
                   '• Redirect URI: wikilazycoders://oauth\n'
                   '• Scopes: Basic rights & upload rights',
-                  style: TextStyle(color: AppTheme.textSecondary, fontSize: 12, height: 1.4),
+                  style: TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),
@@ -400,12 +459,19 @@ class _AuthScreenState extends State<AuthScreen> {
         children: [
           SizedBox(
             width: 100,
-            child: Text(label, style: const TextStyle(color: AppTheme.textMuted, fontSize: 12)),
+            child: Text(
+              label,
+              style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+            ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(color: AppTheme.textPrimary, fontSize: 12, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                color: AppTheme.textPrimary,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],

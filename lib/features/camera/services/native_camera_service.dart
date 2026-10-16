@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -6,25 +7,36 @@ import 'package:wiki_lazy_coders/core/errors/failures.dart';
 import 'package:wiki_lazy_coders/features/camera/models/camera_models.dart';
 
 class NativeCameraService {
-  static const MethodChannel _channel = MethodChannel('org.wikimedia.wikilazycoders/camera');
+  static const MethodChannel _channel = MethodChannel(
+    'org.wikimedia.wikilazycoders/camera',
+  );
 
   /// Queries Android MediaCodec and MediaRecorder hardware/software capabilities.
   Future<DeviceCodecCapabilities> getDeviceCapabilities() async {
     try {
-      final res = await _channel.invokeMethod<Map<dynamic, dynamic>>('getDeviceCapabilities');
+      final res = await _channel.invokeMethod<Map<dynamic, dynamic>>(
+        'getDeviceCapabilities',
+      );
       if (res == null) {
-        throw const CameraFailure('Null response received from camera capabilities inquiry.');
+        throw const CameraFailure(
+          'Null response received from camera capabilities inquiry.',
+        );
       }
       return DeviceCodecCapabilities.fromMap(res);
     } on PlatformException catch (e) {
-      throw CameraFailure('Failed to query camera capabilities: ${e.message}', code: e.code);
+      throw CameraFailure(
+        'Failed to query camera capabilities: ${e.message}',
+        code: e.code,
+      );
     }
   }
 
   /// Lists available camera devices on the hardware.
   Future<List<CameraInfo>> getAvailableCameras() async {
     try {
-      final res = await _channel.invokeListMethod<Map<dynamic, dynamic>>('getAvailableCameras');
+      final res = await _channel.invokeListMethod<Map<dynamic, dynamic>>(
+        'getAvailableCameras',
+      );
       if (res == null || res.isEmpty) {
         return [];
       }
@@ -41,14 +53,15 @@ class NativeCameraService {
     int height = 720,
   }) async {
     try {
-      final res = await _channel.invokeMethod<Map<dynamic, dynamic>>('startPreview', {
-        'cameraId': cameraId,
-        'width': width,
-        'height': height,
-      });
+      final res = await _channel.invokeMethod<Map<dynamic, dynamic>>(
+        'startPreview',
+        {'cameraId': cameraId, 'width': width, 'height': height},
+      );
       final textureId = res?['textureId'] as int? ?? -1;
       if (textureId < 0) {
-        throw const CameraFailure('Failed to obtain a valid texture ID for camera preview.');
+        throw const CameraFailure(
+          'Failed to obtain a valid texture ID for camera preview.',
+        );
       }
       return textureId;
     } on PlatformException catch (e) {
@@ -61,7 +74,10 @@ class NativeCameraService {
     try {
       await _channel.invokeMethod<bool>('stopPreview');
     } on PlatformException catch (e) {
-      throw CameraFailure('Failed to stop camera preview: ${e.message}', code: e.code);
+      throw CameraFailure(
+        'Failed to stop camera preview: ${e.message}',
+        code: e.code,
+      );
     }
   }
 
@@ -93,14 +109,19 @@ class NativeCameraService {
 
       return outputPath;
     } on PlatformException catch (e) {
-      throw RecordingFailure('Failed to start recording: ${e.message}', code: e.code);
+      throw RecordingFailure(
+        'Failed to start recording: ${e.message}',
+        code: e.code,
+      );
     }
   }
 
   /// Stops current recording and returns the output file path and validation result.
   Future<Map<String, dynamic>> stopRecording() async {
     try {
-      final res = await _channel.invokeMethod<Map<dynamic, dynamic>>('stopRecording');
+      final res = await _channel.invokeMethod<Map<dynamic, dynamic>>(
+        'stopRecording',
+      );
       if (res == null) {
         throw const RecordingFailure('Stop recording returned null response.');
       }
@@ -108,39 +129,47 @@ class NativeCameraService {
       final valMap = res['validation'] as Map<dynamic, dynamic>? ?? {};
       final validation = WebmValidationResult.fromMap(valMap);
 
-      return {
-        'filePath': filePath,
-        'validation': validation,
-      };
+      return {'filePath': filePath, 'validation': validation};
     } on PlatformException catch (e) {
-      throw RecordingFailure('Failed to stop recording cleanly: ${e.message}', code: e.code);
+      throw RecordingFailure(
+        'Failed to stop recording cleanly: ${e.message}',
+        code: e.code,
+      );
     }
   }
 
   /// Validates any local file path using native EBML byte inspection and MediaExtractor.
   Future<WebmValidationResult> validateWebm(String filePath) async {
     try {
-      final res = await _channel.invokeMethod<Map<dynamic, dynamic>>('validateWebm', {
-        'filePath': filePath,
-      });
+      final res = await _channel.invokeMethod<Map<dynamic, dynamic>>(
+        'validateWebm',
+        {'filePath': filePath},
+      );
       if (res == null) {
         throw const WebmValidationFailure('Validation returned null result.');
       }
       return WebmValidationResult.fromMap(res);
     } on PlatformException catch (e) {
-      throw WebmValidationFailure('WebM validation failed: ${e.message}', code: e.code);
+      throw WebmValidationFailure(
+        'WebM validation failed: ${e.message}',
+        code: e.code,
+      );
     }
   }
 
   /// Generates a genuine EBML WebM test sample for container verification testing.
   Future<String> createSampleWebm(String filePath) async {
     try {
-      final res = await _channel.invokeMethod<Map<dynamic, dynamic>>('createSampleWebm', {
-        'filePath': filePath,
-      });
+      final res = await _channel.invokeMethod<Map<dynamic, dynamic>>(
+        'createSampleWebm',
+        {'filePath': filePath},
+      );
       return res?['filePath']?.toString() ?? filePath;
     } on PlatformException catch (e) {
-      throw WebmValidationFailure('Failed to generate sample WebM: ${e.message}', code: e.code);
+      throw WebmValidationFailure(
+        'Failed to generate sample WebM: ${e.message}',
+        code: e.code,
+      );
     }
   }
 }

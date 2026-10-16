@@ -1,30 +1,23 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:wiki_lazy_coders/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('App shell loads navigation items and initial screen', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const WikiLazyCodersApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Verify bottom navigation bar items exist
+    expect(find.text('Camera'), findsOneWidget);
+    expect(find.text('Recordings'), findsOneWidget);
+    expect(find.text('Wikimedia'), findsOneWidget);
+    expect(find.text('Settings'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify icons exist
+    expect(find.byIcon(Icons.videocam), findsOneWidget);
+    expect(find.byIcon(Icons.video_library_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.cloud_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.settings_outlined), findsOneWidget);
   });
 }

@@ -77,15 +77,24 @@ class DeviceCodecCapabilities {
       hasVp9Encoder: map['hasVp9Encoder'] as bool? ?? false,
       hasOpusEncoder: map['hasOpusEncoder'] as bool? ?? false,
       hasVorbisEncoder: map['hasVorbisEncoder'] as bool? ?? false,
-      videoEncoders: (map['videoEncoders'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
-      audioEncoders: (map['audioEncoders'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      videoEncoders:
+          (map['videoEncoders'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+      audioEncoders:
+          (map['audioEncoders'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
       androidVersion: map['androidVersion']?.toString() ?? 'Unknown',
       sdkInt: map['sdkInt'] as int? ?? 0,
       deviceModel: map['deviceModel']?.toString() ?? 'Android Device',
     );
   }
 
-  bool get isCommonsReady => supportsWebmContainer && (hasVp8Encoder || hasVp9Encoder);
+  bool get isCommonsReady =>
+      supportsWebmContainer && (hasVp8Encoder || hasVp9Encoder);
 }
 
 class WebmValidationResult {
@@ -136,8 +145,12 @@ class WebmValidationResult {
 
   double get durationSeconds => durationUs / 1000000.0;
   String get fileSizeFormatted {
-    if (fileSizeBytes < 1024) return '$fileSizeBytes B';
-    if (fileSizeBytes < 1024 * 1024) return '${(fileSizeBytes / 1024).toStringAsFixed(1)} KB';
+    if (fileSizeBytes < 1024) {
+      return '$fileSizeBytes B';
+    }
+    if (fileSizeBytes < 1024 * 1024) {
+      return '${(fileSizeBytes / 1024).toStringAsFixed(1)} KB';
+    }
     return '${(fileSizeBytes / (1024 * 1024)).toStringAsFixed(2)} MB';
   }
 }

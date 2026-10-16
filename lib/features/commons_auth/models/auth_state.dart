@@ -16,16 +16,20 @@ class WikimediaUser {
       id: map['id'] as int? ?? 0,
       name: map['name']?.toString() ?? 'Wikimedia User',
       editCount: map['editcount'] as int? ?? 0,
-      groups: (map['groups'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      groups:
+          (map['groups'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
     );
   }
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'name': name,
-        'editcount': editCount,
-        'groups': groups,
-      };
+    'id': id,
+    'name': name,
+    'editcount': editCount,
+    'groups': groups,
+  };
 }
 
 class OAuthTokens {
@@ -54,9 +58,9 @@ class OAuthTokens {
   }
 
   Map<String, dynamic> toMap() => {
-        'access_token': accessToken,
-        'refresh_token': refreshToken,
-        'expires_at': expiresAt.toIso8601String(),
-        'token_type': tokenType,
-      };
+    'access_token': accessToken,
+    'refresh_token': refreshToken,
+    'expires_at': expiresAt.toIso8601String(),
+    'token_type': tokenType,
+  };
 }

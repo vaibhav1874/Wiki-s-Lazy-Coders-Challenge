@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:wiki_lazy_coders/core/theme/app_theme.dart';
 import 'package:wiki_lazy_coders/features/camera/models/camera_models.dart';
@@ -18,7 +19,8 @@ class CameraScreen extends StatefulWidget {
   State<CameraScreen> createState() => _CameraScreenState();
 }
 
-class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver {
+class _CameraScreenState extends State<CameraScreen>
+    with WidgetsBindingObserver {
   final NativeCameraService _cameraService = NativeCameraService();
 
   List<CameraInfo> _cameras = [];
@@ -49,7 +51,8 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.inactive || state == AppLifecycleState.paused) {
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused) {
       if (_isRecording) {
         _stopRecording();
       }
@@ -161,7 +164,10 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
     }
   }
 
-  void _showRecordingSuccessSheet(String filePath, WebmValidationResult validation) {
+  void _showRecordingSuccessSheet(
+    String filePath,
+    WebmValidationResult validation,
+  ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.surface,
@@ -178,8 +184,12 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
               Row(
                 children: [
                   Icon(
-                    validation.isCommonsCompliant ? Icons.check_circle : Icons.warning_rounded,
-                    color: validation.isCommonsCompliant ? AppTheme.primaryAccent : AppTheme.warningOrange,
+                    validation.isCommonsCompliant
+                        ? Icons.check_circle
+                        : Icons.warning_rounded,
+                    color: validation.isCommonsCompliant
+                        ? AppTheme.primaryAccent
+                        : AppTheme.warningOrange,
                     size: 28,
                   ),
                   const SizedBox(width: 12),
@@ -205,7 +215,9 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                   borderRadius: BorderRadius.circular(10),
                   border: Border(
                     left: BorderSide(
-                      color: validation.isCommonsCompliant ? AppTheme.primaryAccent : AppTheme.warningOrange,
+                      color: validation.isCommonsCompliant
+                          ? AppTheme.primaryAccent
+                          : AppTheme.warningOrange,
                       width: 4,
                     ),
                   ),
@@ -213,17 +225,37 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Container: WebM (DocType: ${validation.docType})',
-                        style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+                    Text(
+                      'Container: WebM (DocType: ${validation.docType})',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Text('Video Track: ${validation.videoMime ?? "VP8"} (${validation.width}x${validation.height})',
-                        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                    Text(
+                      'Video Track: ${validation.videoMime ?? "VP8"} (${validation.width}x${validation.height})',
+                      style: const TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text('Audio Track: ${validation.audioMime ?? "Opus"}',
-                        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                    Text(
+                      'Audio Track: ${validation.audioMime ?? "Opus"}',
+                      style: const TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text('Duration: ${validation.durationSeconds.toStringAsFixed(1)}s  •  Size: ${validation.fileSizeFormatted}',
-                        style: const TextStyle(color: AppTheme.textMuted, fontSize: 12)),
+                    Text(
+                      'Duration: ${validation.durationSeconds.toStringAsFixed(1)}s  •  Size: ${validation.fileSizeFormatted}',
+                      style: const TextStyle(
+                        color: AppTheme.textMuted,
+                        fontSize: 12,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -302,7 +334,11 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.videocam_off, color: AppTheme.recordingRed, size: 54),
+                    const Icon(
+                      Icons.videocam_off,
+                      color: AppTheme.recordingRed,
+                      size: 54,
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       _errorMessage!,
@@ -329,7 +365,10 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
               children: [
                 // Container / Codec Badge
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.65),
                     borderRadius: BorderRadius.circular(20),
@@ -366,13 +405,17 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                     IconButton(
                       icon: Icon(
                         _config.audioEnabled ? Icons.mic : Icons.mic_off,
-                        color: _config.audioEnabled ? Colors.white : AppTheme.recordingRed,
+                        color: _config.audioEnabled
+                            ? Colors.white
+                            : AppTheme.recordingRed,
                       ),
                       onPressed: _isRecording
                           ? null
                           : () {
                               setState(() {
-                                _config = _config.copyWith(audioEnabled: !_config.audioEnabled);
+                                _config = _config.copyWith(
+                                  audioEnabled: !_config.audioEnabled,
+                                );
                               });
                             },
                     ),
@@ -380,7 +423,10 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                     // Camera Switch (Front/Back)
                     if (_cameras.length > 1)
                       IconButton(
-                        icon: const Icon(Icons.flip_camera_android, color: Colors.white),
+                        icon: const Icon(
+                          Icons.flip_camera_android,
+                          color: Colors.white,
+                        ),
                         onPressed: _isRecording ? null : _switchCamera,
                       ),
                   ],
@@ -397,11 +443,17 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
               right: 0,
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.75),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppTheme.recordingRed, width: 1.5),
+                    border: Border.all(
+                      color: AppTheme.recordingRed,
+                      width: 1.5,
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -442,8 +494,13 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                 // Gallery shortcut
                 IconButton(
                   iconSize: 32,
-                  icon: const Icon(Icons.photo_library_outlined, color: Colors.white70),
-                  onPressed: _isRecording ? null : widget.onNavigateToRecordings,
+                  icon: const Icon(
+                    Icons.photo_library_outlined,
+                    color: Colors.white70,
+                  ),
+                  onPressed: _isRecording
+                      ? null
+                      : widget.onNavigateToRecordings,
                 ),
 
                 // Main Circular Record Button
@@ -467,7 +524,9 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                       duration: const Duration(milliseconds: 250),
                       decoration: BoxDecoration(
                         color: AppTheme.recordingRed,
-                        borderRadius: BorderRadius.circular(_isRecording ? 10 : 36),
+                        borderRadius: BorderRadius.circular(
+                          _isRecording ? 10 : 36,
+                        ),
                       ),
                     ),
                   ),
@@ -494,7 +553,10 @@ class _CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver
                   ],
                   onSelected: (res) {
                     setState(() {
-                      _config = _config.copyWith(width: res.width, height: res.height);
+                      _config = _config.copyWith(
+                        width: res.width,
+                        height: res.height,
+                      );
                     });
                     _initializeCamera();
                   },

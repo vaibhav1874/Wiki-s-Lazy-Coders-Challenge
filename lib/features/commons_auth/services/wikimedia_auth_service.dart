@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+
 import 'package:crypto/crypto.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -10,16 +11,16 @@ import 'package:wiki_lazy_coders/core/errors/failures.dart';
 import 'package:wiki_lazy_coders/features/commons_auth/models/auth_state.dart';
 
 class WikimediaAuthService {
-  static const MethodChannel _authChannel = MethodChannel('org.wikimedia.wikilazycoders/auth');
+  static const MethodChannel _authChannel = MethodChannel(
+    'org.wikimedia.wikilazycoders/auth',
+  );
 
   final FlutterSecureStorage _storage;
   final http.Client _httpClient;
 
-  WikimediaAuthService({
-    FlutterSecureStorage? storage,
-    http.Client? httpClient,
-  })  : _storage = storage ?? const FlutterSecureStorage(),
-        _httpClient = httpClient ?? http.Client();
+  WikimediaAuthService({FlutterSecureStorage? storage, http.Client? httpClient})
+    : _storage = storage ?? const FlutterSecureStorage(),
+      _httpClient = httpClient ?? http.Client();
 
   String? _lastCodeVerifier;
 
@@ -33,7 +34,8 @@ class WikimediaAuthService {
       final tokens = OAuthTokens(
         accessToken: map['access_token']?.toString() ?? '',
         refreshToken: map['refresh_token']?.toString(),
-        expiresAt: DateTime.tryParse(map['expires_at']?.toString() ?? '') ??
+        expiresAt:
+            DateTime.tryParse(map['expires_at']?.toString() ?? '') ??
             DateTime.now().add(const Duration(hours: 1)),
         tokenType: map['token_type']?.toString() ?? 'Bearer',
       );
@@ -74,14 +76,20 @@ class WikimediaAuthService {
   String _generateCodeVerifier() {
     final random = Random.secure();
     final values = List<int>.generate(48, (_) => random.nextInt(256));
-    return base64UrlEncode(values).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
+    return base64UrlEncode(values)
+        .replaceAll('=', '')
+        .replaceAll('+', '-')
+        .replaceAll('/', '_');
   }
 
   /// Generates PKCE code_challenge = base64url(SHA256(code_verifier)).
   String _generateCodeChallenge(String verifier) {
     final bytes = ascii.encode(verifier);
     final digest = sha256.convert(bytes);
-    return base64UrlEncode(digest.bytes).replaceAll('=', '').replaceAll('+', '-').replaceAll('/', '_');
+    return base64UrlEncode(digest.bytes)
+        .replaceAll('=', '')
+        .replaceAll('+', '-')
+        .replaceAll('/', '_');
   }
 
   /// Builds the full Wikimedia OAuth 2.0 PKCE Authorization URL.
@@ -101,7 +109,8 @@ class WikimediaAuthService {
       'code_challenge_method': 'S256',
     };
 
-    return Uri.parse(ApiConstants.oauthAuthorizeUrl).replace(queryParameters: params);
+    return Uri.parse(ApiConstants.oauthAuthorizeUrl)
+        .replace(queryParameters: params);
   }
 
   /// Launches the device browser to authenticate with Wikimedia Commons.
@@ -110,7 +119,9 @@ class WikimediaAuthService {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      throw const WikimediaAuthFailure('Could not launch browser for Wikimedia authorization.');
+      throw const WikimediaAuthFailure(
+        'Could not launch browser for Wikimedia authorization.',
+      );
     }
   }
 
@@ -121,7 +132,9 @@ class WikimediaAuthService {
     verifier ??= await _storage.read(key: 'wm_pkce_verifier');
 
     if (verifier == null) {
-      throw const WikimediaAuthFailure('Missing PKCE code verifier. Please restart authentication.');
+      throw const WikimediaAuthFailure(
+        'Missing PKCE code verifier. Please restart authentication.',
+      );
     }
 
     final response = await _httpClient.post(
@@ -151,7 +164,10 @@ class WikimediaAuthService {
     final tokens = OAuthTokens.fromMap(tokenMap);
 
     // Save tokens securely
-    await _storage.write(key: ApiConstants.keyAccessToken, value: jsonEncode(tokens.toMap()));
+    await _storage.write(
+      key: ApiConstants.keyAccessToken,
+      value: jsonEncode(tokens.toMap()),
+    );
 
     // Fetch and save user profile
     await fetchAndSaveUserProfile(tokens.accessToken);
@@ -176,12 +192,17 @@ class WikimediaAuthService {
     );
 
     if (response.statusCode != 200) {
-      throw WikimediaAuthFailure('Failed to refresh token (${response.statusCode}): ${response.body}');
+      throw WikimediaAuthFailure(
+        'Failed to refresh token (${response.statusCode}): ${response.body}',
+      );
     }
 
     final tokenMap = jsonDecode(response.body) as Map<String, dynamic>;
     final tokens = OAuthTokens.fromMap(tokenMap);
-    await _storage.write(key: ApiConstants.keyAccessToken, value: jsonEncode(tokens.toMap()));
+    await _storage.write(
+      key: ApiConstants.keyAccessToken,
+      value: jsonEncode(tokens.toMap()),
+    );
     return tokens;
   }
 
@@ -205,17 +226,24 @@ class WikimediaAuthService {
     );
 
     if (response.statusCode != 200) {
-      throw WikimediaAuthFailure('Failed to fetch user profile: ${response.body}');
+      throw WikimediaAuthFailure(
+        'Failed to fetch user profile: ${response.body}',
+      );
     }
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     final userInfo = data['query']?['userinfo'] as Map<String, dynamic>?;
     if (userInfo == null) {
-      throw const WikimediaAuthFailure('Invalid user info response from Wikimedia API.');
+      throw const WikimediaAuthFailure(
+        'Invalid user info response from Wikimedia API.',
+      );
     }
 
     final user = WikimediaUser.fromMap(userInfo);
-    await _storage.write(key: ApiConstants.keyUsername, value: jsonEncode(user.toMap()));
+    await _storage.write(
+      key: ApiConstants.keyUsername,
+      value: jsonEncode(user.toMap()),
+    );
     return user;
   }
 

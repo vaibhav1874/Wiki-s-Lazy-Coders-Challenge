@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
@@ -32,7 +33,9 @@ class _UploadScreenState extends State<UploadScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _authorController = TextEditingController();
-  final _categoriesController = TextEditingController(text: 'Videos, WebM videos');
+  final _categoriesController = TextEditingController(
+    text: 'Videos, WebM videos',
+  );
 
   CommonsLicense _selectedLicense = CommonsLicense.ccBySa4;
   bool _confirmedRights = false;
@@ -42,7 +45,9 @@ class _UploadScreenState extends State<UploadScreen> {
   WikimediaUser? _user;
   bool _isCheckingAuth = true;
 
-  UploadProgressState _progressState = const UploadProgressState(status: UploadStatus.idle);
+  UploadProgressState _progressState = const UploadProgressState(
+    status: UploadStatus.idle,
+  );
 
   @override
   void initState() {
@@ -78,7 +83,9 @@ class _UploadScreenState extends State<UploadScreen> {
     if (!_confirmedRights) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('You must confirm that you have the rights to publish this recording.'),
+          content: Text(
+            'You must confirm that you have the rights to publish this recording.',
+          ),
           backgroundColor: AppTheme.warningOrange,
         ),
       );
@@ -88,7 +95,9 @@ class _UploadScreenState extends State<UploadScreen> {
     if (_tokens == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please authenticate with Wikimedia Commons before uploading.'),
+          content: Text(
+            'Please authenticate with Wikimedia Commons before uploading.',
+          ),
           backgroundColor: AppTheme.recordingRed,
         ),
       );
@@ -105,7 +114,9 @@ class _UploadScreenState extends State<UploadScreen> {
       title: _titleController.text,
       description: _descriptionController.text,
       date: _recordingDate,
-      author: _authorController.text.trim().isNotEmpty ? _authorController.text.trim() : (_user?.name ?? 'Anonymous'),
+      author: _authorController.text.trim().isNotEmpty
+          ? _authorController.text.trim()
+          : (_user?.name ?? 'Anonymous'),
       license: _selectedLicense,
       categories: categoriesList,
       hasConfirmedRights: _confirmedRights,
@@ -150,16 +161,16 @@ class _UploadScreenState extends State<UploadScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        title: const Text('Upload to Commons'),
-      ),
+      appBar: AppBar(title: const Text('Upload to Commons')),
       body: _isCheckingAuth
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryAccent))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppTheme.primaryAccent),
+            )
           : _progressState.isCompleted
-              ? _buildSuccessView()
-              : _progressState.isUploading
-                  ? _buildUploadingView()
-                  : _buildFormView(),
+          ? _buildSuccessView()
+          : _progressState.isUploading
+          ? _buildUploadingView()
+          : _buildFormView(),
     );
   }
 
@@ -182,12 +193,18 @@ class _UploadScreenState extends State<UploadScreen> {
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.warning_amber_rounded, color: AppTheme.warningOrange),
+                    Icon(
+                      Icons.warning_amber_rounded,
+                      color: AppTheme.warningOrange,
+                    ),
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Not authenticated. Please go to the Wikimedia tab and connect your account first.',
-                        style: TextStyle(color: AppTheme.warningOrange, fontSize: 13),
+                        style: TextStyle(
+                          color: AppTheme.warningOrange,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ],
@@ -205,8 +222,12 @@ class _UploadScreenState extends State<UploadScreen> {
                   border: Border.all(color: AppTheme.recordingRed),
                 ),
                 child: Text(
-                  _progressState.errorMessage ?? 'Upload failed. Please check parameters and try again.',
-                  style: const TextStyle(color: AppTheme.recordingRed, fontSize: 13),
+                  _progressState.errorMessage ??
+                      'Upload failed. Please check parameters and try again.',
+                  style: const TextStyle(
+                    color: AppTheme.recordingRed,
+                    fontSize: 13,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -221,8 +242,12 @@ class _UploadScreenState extends State<UploadScreen> {
                 suffixText: '.webm',
               ),
               validator: (val) {
-                if (val == null || val.trim().isEmpty) return 'Please provide a file title';
-                if (val.trim().length < 3) return 'Title must be at least 3 characters';
+                if (val == null || val.trim().isEmpty) {
+                  return 'Please provide a file title';
+                }
+                if (val.trim().length < 3) {
+                  return 'Title must be at least 3 characters';
+                }
                 return null;
               },
             ),
@@ -237,7 +262,9 @@ class _UploadScreenState extends State<UploadScreen> {
                 hintText: 'Describe what this WebM recording depicts...',
               ),
               validator: (val) {
-                if (val == null || val.trim().isEmpty) return 'Please provide a description';
+                if (val == null || val.trim().isEmpty) {
+                  return 'Please provide a description';
+                }
                 return null;
               },
             ),
@@ -251,7 +278,9 @@ class _UploadScreenState extends State<UploadScreen> {
                 hintText: 'Wikimedia username or legal name',
               ),
               validator: (val) {
-                if (val == null || val.trim().isEmpty) return 'Please specify the author name';
+                if (val == null || val.trim().isEmpty) {
+                  return 'Please specify the author name';
+                }
                 return null;
               },
             ),
@@ -265,11 +294,22 @@ class _UploadScreenState extends State<UploadScreen> {
                 side: const BorderSide(color: AppTheme.border),
               ),
               tileColor: AppTheme.surfaceVariant,
-              leading: const Icon(Icons.calendar_today, color: AppTheme.primaryAccent, size: 20),
-              title: const Text('Recording Date', style: TextStyle(fontSize: 13, color: AppTheme.textMuted)),
+              leading: const Icon(
+                Icons.calendar_today,
+                color: AppTheme.primaryAccent,
+                size: 20,
+              ),
+              title: const Text(
+                'Recording Date',
+                style: TextStyle(fontSize: 13, color: AppTheme.textMuted),
+              ),
               subtitle: Text(
                 DateFormat('MMMM d, yyyy').format(_recordingDate),
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.textPrimary,
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -287,7 +327,11 @@ class _UploadScreenState extends State<UploadScreen> {
             // License Selection Card
             const Text(
               'Free License Selection (Wikimedia Commons Requirement)',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+              ),
             ),
             const SizedBox(height: 8),
             Card(
@@ -297,7 +341,10 @@ class _UploadScreenState extends State<UploadScreen> {
                   children: CommonsLicense.values.map((lic) {
                     // ignore: deprecated_member_use
                     return RadioListTile<CommonsLicense>(
-                      title: Text(lic.displayName, style: const TextStyle(fontSize: 13)),
+                      title: Text(
+                        lic.displayName,
+                        style: const TextStyle(fontSize: 13),
+                      ),
                       value: lic,
                       // ignore: deprecated_member_use
                       groupValue: _selectedLicense,
@@ -322,7 +369,8 @@ class _UploadScreenState extends State<UploadScreen> {
                 'I confirm that I recorded this video myself, own the copyright, and agree to irrevocably license it under the selected free license according to Wikimedia Commons Terms.',
                 style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
               ),
-              onChanged: (val) => setState(() => _confirmedRights = val ?? false),
+              onChanged: (val) =>
+                  setState(() => _confirmedRights = val ?? false),
             ),
             const SizedBox(height: 24),
 
@@ -352,13 +400,21 @@ class _UploadScreenState extends State<UploadScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(color: AppTheme.primaryAccent),
               ),
-              child: const Icon(Icons.cloud_upload_outlined, size: 54, color: AppTheme.primaryAccent),
+              child: const Icon(
+                Icons.cloud_upload_outlined,
+                size: 54,
+                color: AppTheme.primaryAccent,
+              ),
             ),
             const SizedBox(height: 24),
             Text(
               _progressState.statusMessage,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textPrimary,
+              ),
             ),
             const SizedBox(height: 16),
             LinearProgressIndicator(
@@ -371,7 +427,11 @@ class _UploadScreenState extends State<UploadScreen> {
             const SizedBox(height: 12),
             Text(
               _progressState.progressPercentage,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.primaryAccent),
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.primaryAccent,
+              ),
             ),
           ],
         ),
@@ -393,18 +453,30 @@ class _UploadScreenState extends State<UploadScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(color: AppTheme.primaryAccent, width: 2),
               ),
-              child: const Icon(Icons.check_circle_outline, size: 64, color: AppTheme.primaryAccent),
+              child: const Icon(
+                Icons.check_circle_outline,
+                size: 64,
+                color: AppTheme.primaryAccent,
+              ),
             ),
             const SizedBox(height: 24),
             const Text(
               'Upload Successful!',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textPrimary,
+              ),
             ),
             const SizedBox(height: 10),
             const Text(
               'Your WebM recording is now published on Wikimedia Commons and freely accessible to the world.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: AppTheme.textSecondary, height: 1.4),
+              style: TextStyle(
+                fontSize: 14,
+                color: AppTheme.textSecondary,
+                height: 1.4,
+              ),
             ),
             const SizedBox(height: 28),
             if (_progressState.filePageUrl != null)

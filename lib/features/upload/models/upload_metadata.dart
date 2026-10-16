@@ -1,5 +1,8 @@
 enum CommonsLicense {
-  ccBySa4('Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0)', '{{self|cc-by-sa-4.0}}'),
+  ccBySa4(
+    'Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0)',
+    '{{self|cc-by-sa-4.0}}',
+  ),
   ccBy4('Creative Commons Attribution 4.0 (CC BY 4.0)', '{{self|cc-by-4.0}}'),
   cc0('Creative Commons CC0 1.0 Universal (Public Domain)', '{{Cc-zero}}');
 
@@ -48,14 +51,17 @@ class UploadMetadata {
 
   /// Generates the standard MediaWiki wikitext for Wikimedia Commons.
   String generateWikitext() {
-    final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    
+    final dateStr =
+        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
     var locationWikitext = '';
     if (latitude != null && longitude != null) {
       locationWikitext = '\n{{Location|$latitude|$longitude}}';
     }
 
-    final categoryTags = categories.map((c) => '[[Category:${c.trim()}]]').join('\n');
+    final categoryTags = categories
+        .map((c) => '[[Category:${c.trim()}]]')
+        .join('\n');
 
     return '''
 == {{int:filedesc}} ==
@@ -72,6 +78,7 @@ class UploadMetadata {
 ${license.wikitextTemplate}
 
 $categoryTags
-'''.trim();
+'''
+        .trim();
   }
 }

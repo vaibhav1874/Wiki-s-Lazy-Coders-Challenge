@@ -53,22 +53,27 @@ class _RecordingsScreenState extends State<RecordingsScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryAccent))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppTheme.primaryAccent),
+            )
           : _recordings.isEmpty
-              ? _buildEmptyState()
-              : RefreshIndicator(
-                  color: AppTheme.primaryAccent,
-                  backgroundColor: AppTheme.surfaceVariant,
-                  onRefresh: _loadRecordings,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    itemCount: _recordings.length,
-                    itemBuilder: (context, index) {
-                      final item = _recordings[index];
-                      return _buildRecordingCard(item);
-                    },
-                  ),
+          ? _buildEmptyState()
+          : RefreshIndicator(
+              color: AppTheme.primaryAccent,
+              backgroundColor: AppTheme.surfaceVariant,
+              onRefresh: _loadRecordings,
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
+                itemCount: _recordings.length,
+                itemBuilder: (context, index) {
+                  final item = _recordings[index];
+                  return _buildRecordingCard(item);
+                },
+              ),
+            ),
     );
   }
 
@@ -155,7 +160,11 @@ class _RecordingsScreenState extends State<RecordingsScreen> {
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: AppTheme.border),
                 ),
-                child: const Icon(Icons.play_circle_fill, color: AppTheme.primaryAccent, size: 30),
+                child: const Icon(
+                  Icons.play_circle_fill,
+                  color: AppTheme.primaryAccent,
+                  size: 30,
+                ),
               ),
               const SizedBox(width: 14),
 
@@ -177,26 +186,41 @@ class _RecordingsScreenState extends State<RecordingsScreen> {
                     const SizedBox(height: 4),
                     Text(
                       dateFormat.format(item.recordedAt),
-                      style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textMuted,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
                         Text(
                           item.fileSizeFormatted,
-                          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.textSecondary,
+                          ),
                         ),
                         const SizedBox(width: 8),
-                        const Text('•', style: TextStyle(color: AppTheme.textMuted)),
+                        const Text(
+                          '•',
+                          style: TextStyle(color: AppTheme.textMuted),
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           '${item.durationSeconds.toStringAsFixed(1)}s',
-                          style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.textSecondary,
+                          ),
                         ),
                         const SizedBox(width: 8),
                         // Badge
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: item.isCommonsCompliant
                                 ? AppTheme.primary.withValues(alpha: 0.2)
@@ -208,7 +232,9 @@ class _RecordingsScreenState extends State<RecordingsScreen> {
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
-                              color: item.isCommonsCompliant ? AppTheme.primaryAccent : AppTheme.warningOrange,
+                              color: item.isCommonsCompliant
+                                  ? AppTheme.primaryAccent
+                                  : AppTheme.warningOrange,
                             ),
                           ),
                         ),
@@ -227,7 +253,11 @@ class _RecordingsScreenState extends State<RecordingsScreen> {
                     value: 'play',
                     child: Row(
                       children: [
-                        Icon(Icons.play_arrow, size: 20, color: AppTheme.textPrimary),
+                        Icon(
+                          Icons.play_arrow,
+                          size: 20,
+                          color: AppTheme.textPrimary,
+                        ),
                         SizedBox(width: 8),
                         Text('Play Video'),
                       ],
@@ -237,7 +267,11 @@ class _RecordingsScreenState extends State<RecordingsScreen> {
                     value: 'upload',
                     child: Row(
                       children: [
-                        Icon(Icons.cloud_upload_outlined, size: 20, color: AppTheme.primaryAccent),
+                        Icon(
+                          Icons.cloud_upload_outlined,
+                          size: 20,
+                          color: AppTheme.primaryAccent,
+                        ),
                         SizedBox(width: 8),
                         Text('Upload to Commons'),
                       ],
@@ -247,7 +281,11 @@ class _RecordingsScreenState extends State<RecordingsScreen> {
                     value: 'share',
                     child: Row(
                       children: [
-                        Icon(Icons.share_outlined, size: 20, color: AppTheme.textPrimary),
+                        Icon(
+                          Icons.share_outlined,
+                          size: 20,
+                          color: AppTheme.textPrimary,
+                        ),
                         SizedBox(width: 8),
                         Text('Share WebM'),
                       ],
@@ -257,9 +295,16 @@ class _RecordingsScreenState extends State<RecordingsScreen> {
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(Icons.delete_outline, size: 20, color: AppTheme.recordingRed),
+                        Icon(
+                          Icons.delete_outline,
+                          size: 20,
+                          color: AppTheme.recordingRed,
+                        ),
                         SizedBox(width: 8),
-                        Text('Delete', style: TextStyle(color: AppTheme.recordingRed)),
+                        Text(
+                          'Delete',
+                          style: TextStyle(color: AppTheme.recordingRed),
+                        ),
                       ],
                     ),
                   ),

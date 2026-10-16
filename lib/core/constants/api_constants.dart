@@ -3,9 +3,12 @@ class ApiConstants {
   static const String commonsApiUrl = 'https://commons.wikimedia.org/w/api.php';
 
   // Wikimedia OAuth 2.0 endpoints
-  static const String oauthAuthorizeUrl = 'https://commons.wikimedia.org/w/rest.php/oauth2/authorize';
-  static const String oauthTokenUrl = 'https://commons.wikimedia.org/w/rest.php/oauth2/access_token';
-  static const String oauthProfileUrl = 'https://commons.wikimedia.org/w/rest.php/oauth2/resource/profile';
+  static const String oauthAuthorizeUrl =
+      'https://commons.wikimedia.org/w/rest.php/oauth2/authorize';
+  static const String oauthTokenUrl =
+      'https://commons.wikimedia.org/w/rest.php/oauth2/access_token';
+  static const String oauthProfileUrl =
+      'https://commons.wikimedia.org/w/rest.php/oauth2/resource/profile';
 
   // Mobile custom scheme redirect URI
   static const String defaultRedirectUri = 'wikilazycoders://oauth';

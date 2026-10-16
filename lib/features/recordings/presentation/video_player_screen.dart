@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:wiki_lazy_coders/core/theme/app_theme.dart';
@@ -88,10 +89,14 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.share_outlined),
-            onPressed: () => _storageService.shareRecording(widget.recording.filePath),
+            onPressed: () =>
+                _storageService.shareRecording(widget.recording.filePath),
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline, color: AppTheme.recordingRed),
+            icon: const Icon(
+              Icons.delete_outline,
+              color: AppTheme.recordingRed,
+            ),
             onPressed: () async {
               final nav = Navigator.of(context);
               final confirm = await showDialog<bool>(
@@ -99,11 +104,18 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                 builder: (ctx) => AlertDialog(
                   backgroundColor: AppTheme.surface,
                   title: const Text('Delete Recording?'),
-                  content: Text('Are you sure you want to permanently delete "${widget.recording.fileName}"?'),
+                  content: Text(
+                    'Are you sure you want to permanently delete "${widget.recording.fileName}"?',
+                  ),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: const Text('Cancel'),
+                    ),
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: AppTheme.recordingRed),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.recordingRed,
+                      ),
                       onPressed: () => Navigator.pop(ctx, true),
                       child: const Text('Delete'),
                     ),
@@ -111,7 +123,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                 ),
               );
               if (confirm == true) {
-                await _storageService.deleteRecording(widget.recording.filePath);
+                await _storageService.deleteRecording(
+                  widget.recording.filePath,
+                );
                 widget.onDelete();
                 if (mounted) nav.pop();
               }
@@ -145,7 +159,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                         ),
                       )
                     else
-                      const CircularProgressIndicator(color: AppTheme.primaryAccent),
+                      const CircularProgressIndicator(
+                        color: AppTheme.primaryAccent,
+                      ),
 
                     // Center Play/Pause Touch Overlay
                     if (_isInitialized)
@@ -168,7 +184,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                                 color: Colors.black54,
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.play_arrow, size: 54, color: Colors.white),
+                              child: const Icon(
+                                Icons.play_arrow,
+                                size: 54,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
@@ -181,13 +201,18 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
             // Playback Progress Bar & Time
             if (_isInitialized) ...[
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Column(
                   children: [
                     SliderTheme(
                       data: SliderTheme.of(context).copyWith(
                         trackHeight: 3,
-                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+                        thumbShape: const RoundSliderThumbShape(
+                          enabledThumbRadius: 6,
+                        ),
                         activeTrackColor: AppTheme.primaryAccent,
                         inactiveTrackColor: AppTheme.surfaceLight,
                         thumbColor: AppTheme.primaryAccent,
@@ -195,12 +220,22 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                       child: Slider(
                         value: _controller.value.position.inMilliseconds
                             .toDouble()
-                            .clamp(0.0, _controller.value.duration.inMilliseconds.toDouble()),
-                        max: _controller.value.duration.inMilliseconds.toDouble() > 0
-                            ? _controller.value.duration.inMilliseconds.toDouble()
+                            .clamp(
+                              0.0,
+                              _controller.value.duration.inMilliseconds
+                                  .toDouble(),
+                            ),
+                        max:
+                            _controller.value.duration.inMilliseconds
+                                    .toDouble() >
+                                0
+                            ? _controller.value.duration.inMilliseconds
+                                  .toDouble()
                             : 1.0,
                         onChanged: (val) {
-                          _controller.seekTo(Duration(milliseconds: val.toInt()));
+                          _controller.seekTo(
+                            Duration(milliseconds: val.toInt()),
+                          );
                         },
                       ),
                     ),
@@ -209,11 +244,17 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                       children: [
                         Text(
                           _formatDuration(_controller.value.position),
-                          style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                          style: const TextStyle(
+                            color: AppTheme.textMuted,
+                            fontSize: 12,
+                          ),
                         ),
                         Text(
                           _formatDuration(_controller.value.duration),
-                          style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                          style: const TextStyle(
+                            color: AppTheme.textMuted,
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
@@ -243,33 +284,59 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: val.isCommonsCompliant
                                   ? AppTheme.primary.withValues(alpha: 0.25)
-                                  : AppTheme.warningOrange.withValues(alpha: 0.25),
+                                  : AppTheme.warningOrange.withValues(
+                                      alpha: 0.25,
+                                    ),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
-                                color: val.isCommonsCompliant ? AppTheme.primaryAccent : AppTheme.warningOrange,
+                                color: val.isCommonsCompliant
+                                    ? AppTheme.primaryAccent
+                                    : AppTheme.warningOrange,
                               ),
                             ),
                             child: Text(
-                              val.isCommonsCompliant ? 'COMMONS READY' : 'NON-COMPLIANT',
+                              val.isCommonsCompliant
+                                  ? 'COMMONS READY'
+                                  : 'NON-COMPLIANT',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
-                                color: val.isCommonsCompliant ? AppTheme.primaryAccent : AppTheme.warningOrange,
+                                color: val.isCommonsCompliant
+                                    ? AppTheme.primaryAccent
+                                    : AppTheme.warningOrange,
                               ),
                             ),
                           ),
                         ],
                       ),
                       const Divider(height: 24, color: AppTheme.border),
-                      _buildDiagnosticRow('Container Format', 'WebM (EBML: 0x1A45DFA3, DocType: ${val.docType})'),
-                      _buildDiagnosticRow('Video Track', '${val.videoMime ?? "VP8"} (${val.width}x${val.height} @ ${val.frameRate}fps)'),
-                      _buildDiagnosticRow('Audio Track', val.audioMime ?? 'Opus (audio/opus)'),
-                      _buildDiagnosticRow('File Size', widget.recording.fileSizeFormatted),
-                      _buildDiagnosticRow('Duration', '${val.durationSeconds.toStringAsFixed(1)}s'),
+                      _buildDiagnosticRow(
+                        'Container Format',
+                        'WebM (EBML: 0x1A45DFA3, DocType: ${val.docType})',
+                      ),
+                      _buildDiagnosticRow(
+                        'Video Track',
+                        '${val.videoMime ?? "VP8"} (${val.width}x${val.height} @ ${val.frameRate}fps)',
+                      ),
+                      _buildDiagnosticRow(
+                        'Audio Track',
+                        val.audioMime ?? 'Opus (audio/opus)',
+                      ),
+                      _buildDiagnosticRow(
+                        'File Size',
+                        widget.recording.fileSizeFormatted,
+                      ),
+                      _buildDiagnosticRow(
+                        'Duration',
+                        '${val.durationSeconds.toStringAsFixed(1)}s',
+                      ),
                       if (val.diagnostics.isNotEmpty) ...[
                         const SizedBox(height: 12),
                         Container(
@@ -321,7 +388,10 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         children: [
           SizedBox(
             width: 120,
-            child: Text(label, style: const TextStyle(color: AppTheme.textMuted, fontSize: 13)),
+            child: Text(
+              label,
+              style: const TextStyle(color: AppTheme.textMuted, fontSize: 13),
+            ),
           ),
           Expanded(
             child: Text(

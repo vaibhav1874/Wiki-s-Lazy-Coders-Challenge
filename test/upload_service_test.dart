@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -60,7 +61,12 @@ void main() {
 
       expect(wikitext, contains('== {{int:filedesc}} =='));
       expect(wikitext, contains('{{Information'));
-      expect(wikitext, contains('|description={{en|1=A beautiful sunset recorded in WebM format}}'));
+      expect(
+        wikitext,
+        contains(
+          '|description={{en|1=A beautiful sunset recorded in WebM format}}',
+        ),
+      );
       expect(wikitext, contains('|date=2026-10-16'));
       expect(wikitext, contains('|source={{own}}'));
       expect(wikitext, contains('|author=[[User:Vaibhav|Vaibhav]]'));
@@ -112,10 +118,8 @@ void main() {
           jsonEncode({
             'batchcomplete': '',
             'query': {
-              'tokens': {
-                'csrftoken': 'b7c2518e9d2984+\\',
-              }
-            }
+              'tokens': {'csrftoken': 'b7c2518e9d2984+\\'},
+            },
           }),
           200,
           headers: {'content-type': 'application/json'},
@@ -133,10 +137,8 @@ void main() {
         return http.Response(
           jsonEncode({
             'query': {
-              'tokens': {
-                'csrftoken': '+\\',
-              }
-            }
+              'tokens': {'csrftoken': '+\\'},
+            },
           }),
           200,
           headers: {'content-type': 'application/json'},
@@ -150,170 +152,194 @@ void main() {
       );
     });
 
-    test('checkFileExists returns true if file exists and false if missing', () async {
-      final mockClient = MockClient((request) async {
-        final title = request.url.queryParameters['titles'];
-        if (title == 'File:ExistingFile.webm') {
-          return http.Response(
-            jsonEncode({
-              'query': {
-                'pages': {
-                  '123456': {
-                    'pageid': 123456,
-                    'ns': 6,
-                    'title': 'File:ExistingFile.webm',
-                  }
-                }
-              }
-            }),
-            200,
-          );
-        } else {
-          return http.Response(
-            jsonEncode({
-              'query': {
-                'pages': {
-                  '-1': {
-                    'ns': 6,
-                    'title': 'File:NewFile.webm',
-                    'missing': '',
-                  }
-                }
-              }
-            }),
-            200,
-          );
-        }
-      });
+    test(
+      'checkFileExists returns true if file exists and false if missing',
+      () async {
+        final mockClient = MockClient((request) async {
+          final title = request.url.queryParameters['titles'];
+          if (title == 'File:ExistingFile.webm') {
+            return http.Response(
+              jsonEncode({
+                'query': {
+                  'pages': {
+                    '123456': {
+                      'pageid': 123456,
+                      'ns': 6,
+                      'title': 'File:ExistingFile.webm',
+                    },
+                  },
+                },
+              }),
+              200,
+            );
+          } else {
+            return http.Response(
+              jsonEncode({
+                'query': {
+                  'pages': {
+                    '-1': {
+                      'ns': 6,
+                      'title': 'File:NewFile.webm',
+                      'missing': '',
+                    },
+                  },
+                },
+              }),
+              200,
+            );
+          }
+        });
 
-      final service = WikimediaUploadService(httpClient: mockClient);
-      final exists = await service.checkFileExists('ExistingFile.webm', 'token');
-      final notExists = await service.checkFileExists('NewFile.webm', 'token');
-
-      expect(exists, isTrue);
-      expect(notExists, isFalse);
-    });
-
-    test('uploadRecording detects duplicate file and aborts before upload', () async {
-      final tempDir = await Directory.systemTemp.createTemp('webm_test');
-      final tempFile = File('${tempDir.path}/test_duplicate.webm');
-      await tempFile.writeAsBytes(List.filled(1024, 0));
-
-      final mockClient = MockClient((request) async {
-        // Return existing page
-        return http.Response(
-          jsonEncode({
-            'query': {
-              'pages': {
-                '999': {'pageid': 999, 'title': 'File:test_duplicate.webm'}
-              }
-            }
-          }),
-          200,
+        final service = WikimediaUploadService(httpClient: mockClient);
+        final exists = await service.checkFileExists(
+          'ExistingFile.webm',
+          'token',
         );
-      });
+        final notExists = await service.checkFileExists(
+          'NewFile.webm',
+          'token',
+        );
 
-      final service = WikimediaUploadService(httpClient: mockClient);
-      final metadata = UploadMetadata(
-        title: 'test_duplicate',
-        description: 'Duplicate test',
-        date: DateTime.now(),
-        author: 'Vaibhav',
-        license: CommonsLicense.ccBySa4,
-        hasConfirmedRights: true,
-      );
+        expect(exists, isTrue);
+        expect(notExists, isFalse);
+      },
+    );
 
-      await expectLater(
-        () => service.uploadRecording(
+    test(
+      'uploadRecording detects duplicate file and aborts before upload',
+      () async {
+        final tempDir = await Directory.systemTemp.createTemp('webm_test');
+        final tempFile = File('${tempDir.path}/test_duplicate.webm');
+        await tempFile.writeAsBytes(List.filled(1024, 0));
+
+        final mockClient = MockClient((request) async {
+          // Return existing page
+          return http.Response(
+            jsonEncode({
+              'query': {
+                'pages': {
+                  '999': {'pageid': 999, 'title': 'File:test_duplicate.webm'},
+                },
+              },
+            }),
+            200,
+          );
+        });
+
+        final service = WikimediaUploadService(httpClient: mockClient);
+        final metadata = UploadMetadata(
+          title: 'test_duplicate',
+          description: 'Duplicate test',
+          date: DateTime.now(),
+          author: 'Vaibhav',
+          license: CommonsLicense.ccBySa4,
+          hasConfirmedRights: true,
+        );
+
+        await expectLater(
+          () => service.uploadRecording(
+            filePath: tempFile.path,
+            metadata: metadata,
+            accessToken: 'valid-token',
+            onProgressUpdate: (_) {},
+          ),
+          throwsA(
+            predicate(
+              (e) => e is WikimediaUploadFailure && e.code == 'FILE_EXISTS',
+            ),
+          ),
+        );
+
+        await tempFile.delete();
+        await tempDir.delete();
+      },
+    );
+
+    test(
+      'uploadRecording direct upload success flow parses Commons response',
+      () async {
+        final tempDir = await Directory.systemTemp.createTemp('webm_test');
+        final tempFile = File('${tempDir.path}/sample_recording.webm');
+        await tempFile.writeAsBytes(
+          List.filled(2048, 1),
+        ); // 2KB file -> direct multipart
+
+        final mockClient = MockClient((request) async {
+          final query = request.url.queryParameters;
+          if (query['action'] == 'query' && query['titles'] != null) {
+            // checkFileExists -> not exists
+            return http.Response(
+              jsonEncode({
+                'query': {
+                  'pages': {
+                    '-1': {'title': query['titles'], 'missing': ''},
+                  },
+                },
+              }),
+              200,
+            );
+          }
+
+          if (query['action'] == 'query' && query['meta'] == 'tokens') {
+            // fetchCsrfToken
+            return http.Response(
+              jsonEncode({
+                'query': {
+                  'tokens': {'csrftoken': 'mock_csrf_token_value+\\'},
+                },
+              }),
+              200,
+            );
+          }
+
+          // Direct upload POST request
+          expect(request.method, 'POST');
+          return http.Response(
+            jsonEncode({
+              'upload': {
+                'result': 'Success',
+                'filename': 'sample_recording.webm',
+                'imageinfo': {
+                  'timestamp': '2026-10-16T08:00:00Z',
+                  'user': 'Vaibhav',
+                  'size': 2048,
+                  'descriptionurl': 'https://commons.wikimedia.org/wiki/File:sample_recording.webm',
+                },
+              },
+            }),
+            200,
+          );
+        });
+
+        final service = WikimediaUploadService(httpClient: mockClient);
+        final progressList = <UploadProgressState>[];
+
+        final metadata = UploadMetadata(
+          title: 'sample_recording',
+          description: 'Direct upload success test',
+          date: DateTime.now(),
+          author: 'Vaibhav',
+          license: CommonsLicense.ccBy4,
+          hasConfirmedRights: true,
+        );
+
+        final result = await service.uploadRecording(
           filePath: tempFile.path,
           metadata: metadata,
-          accessToken: 'valid-token',
-          onProgressUpdate: (_) {},
-        ),
-        throwsA(predicate((e) => e is WikimediaUploadFailure && e.code == 'FILE_EXISTS')),
-      );
-
-      await tempFile.delete();
-      await tempDir.delete();
-    });
-
-    test('uploadRecording direct upload success flow parses Commons response', () async {
-      final tempDir = await Directory.systemTemp.createTemp('webm_test');
-      final tempFile = File('${tempDir.path}/sample_recording.webm');
-      await tempFile.writeAsBytes(List.filled(2048, 1)); // 2KB file -> direct multipart
-
-      final mockClient = MockClient((request) async {
-        final query = request.url.queryParameters;
-        if (query['action'] == 'query' && query['titles'] != null) {
-          // checkFileExists -> not exists
-          return http.Response(
-            jsonEncode({
-              'query': {
-                'pages': {
-                  '-1': {'title': query['titles'], 'missing': ''}
-                }
-              }
-            }),
-            200,
-          );
-        }
-
-        if (query['action'] == 'query' && query['meta'] == 'tokens') {
-          // fetchCsrfToken
-          return http.Response(
-            jsonEncode({
-              'query': {
-                'tokens': {'csrftoken': 'mock_csrf_token_value+\\'}
-              }
-            }),
-            200,
-          );
-        }
-
-        // Direct upload POST request
-        expect(request.method, 'POST');
-        return http.Response(
-          jsonEncode({
-            'upload': {
-              'result': 'Success',
-              'filename': 'sample_recording.webm',
-              'imageinfo': {
-                'timestamp': '2026-10-16T08:00:00Z',
-                'user': 'Vaibhav',
-                'size': 2048,
-                'descriptionurl': 'https://commons.wikimedia.org/wiki/File:sample_recording.webm',
-              }
-            }
-          }),
-          200,
+          accessToken: 'oauth-token',
+          onProgressUpdate: (p) => progressList.add(p),
         );
-      });
 
-      final service = WikimediaUploadService(httpClient: mockClient);
-      final progressList = <UploadProgressState>[];
+        expect(result.status, UploadStatus.completed);
+        expect(
+          result.filePageUrl,
+          'https://commons.wikimedia.org/wiki/File:sample_recording.webm',
+        );
+        expect(progressList.isNotEmpty, isTrue);
 
-      final metadata = UploadMetadata(
-        title: 'sample_recording',
-        description: 'Direct upload success test',
-        date: DateTime.now(),
-        author: 'Vaibhav',
-        license: CommonsLicense.ccBy4,
-        hasConfirmedRights: true,
-      );
-
-      final result = await service.uploadRecording(
-        filePath: tempFile.path,
-        metadata: metadata,
-        accessToken: 'oauth-token',
-        onProgressUpdate: (p) => progressList.add(p),
-      );
-
-      expect(result.status, UploadStatus.completed);
-      expect(result.filePageUrl, 'https://commons.wikimedia.org/wiki/File:sample_recording.webm');
-      expect(progressList.isNotEmpty, isTrue);
-
-      await tempFile.delete();
-      await tempDir.delete();
-    });
+        await tempFile.delete();
+        await tempDir.delete();
+      },
+    );
   });
 }

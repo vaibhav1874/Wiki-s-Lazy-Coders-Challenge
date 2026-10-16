@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:wiki_lazy_coders/core/constants/api_constants.dart';
@@ -11,7 +12,8 @@ import 'package:wiki_lazy_coders/features/upload/models/upload_task.dart';
 class WikimediaUploadService {
   final http.Client _httpClient;
 
-  WikimediaUploadService({http.Client? httpClient}) : _httpClient = httpClient ?? http.Client();
+  WikimediaUploadService({http.Client? httpClient})
+    : _httpClient = httpClient ?? http.Client();
 
   /// Fetches a CSRF token for the authenticated user from the Action API.
   Future<String> fetchCsrfToken(String accessToken) async {
@@ -33,13 +35,17 @@ class WikimediaUploadService {
     );
 
     if (response.statusCode != 200) {
-      throw WikimediaUploadFailure('Failed to fetch CSRF token: HTTP ${response.statusCode}');
+      throw WikimediaUploadFailure(
+        'Failed to fetch CSRF token: HTTP ${response.statusCode}',
+      );
     }
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     final token = data['query']?['tokens']?['csrftoken']?.toString();
     if (token == null || token.isEmpty || token == '+\\') {
-      throw const WikimediaUploadFailure('Invalid or anonymous CSRF token. Please authenticate first.');
+      throw const WikimediaUploadFailure(
+        'Invalid or anonymous CSRF token. Please authenticate first.',
+      );
     }
 
     return token;
@@ -87,7 +93,9 @@ class WikimediaUploadService {
   }) async {
     final file = File(filePath);
     if (!await file.exists()) {
-      throw const WikimediaUploadFailure('Recording file does not exist on disk.');
+      throw const WikimediaUploadFailure(
+        'Recording file does not exist on disk.',
+      );
     }
 
     final totalBytes = await file.length();
@@ -167,7 +175,10 @@ class WikimediaUploadService {
       ),
     );
 
-    final request = http.MultipartRequest('POST', Uri.parse(ApiConstants.commonsApiUrl));
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse(ApiConstants.commonsApiUrl),
+    );
     request.headers['User-Agent'] = ApiConstants.userAgent;
     request.headers['Authorization'] = 'Bearer $accessToken';
 
@@ -175,7 +186,8 @@ class WikimediaUploadService {
     request.fields['filename'] = filename;
     request.fields['token'] = csrfToken;
     request.fields['text'] = metadata.generateWikitext();
-    request.fields['comment'] = 'Uploaded via Wiki WebM Camera (Lazy Coders Challenge)';
+    request.fields['comment'] =
+        'Uploaded via Wiki WebM Camera (Lazy Coders Challenge)';
     request.fields['format'] = 'json';
 
     final multipartFile = await http.MultipartFile.fromPath(
@@ -209,10 +221,15 @@ class WikimediaUploadService {
 
     try {
       while (offset < totalBytes) {
-        final bytesToRead = (offset + chunkSize <= totalBytes) ? chunkSize : (totalBytes - offset);
+        final bytesToRead = (offset + chunkSize <= totalBytes)
+            ? chunkSize
+            : (totalBytes - offset);
         final chunkBytes = await randomAccess.read(bytesToRead);
 
-        final request = http.MultipartRequest('POST', Uri.parse(ApiConstants.commonsApiUrl));
+        final request = http.MultipartRequest(
+          'POST',
+          Uri.parse(ApiConstants.commonsApiUrl),
+        );
         request.headers['User-Agent'] = ApiConstants.userAgent;
         request.headers['Authorization'] = 'Bearer $accessToken';
 
@@ -240,7 +257,9 @@ class WikimediaUploadService {
         final resp = await http.Response.fromStream(streamed);
 
         if (resp.statusCode != 200) {
-          throw WikimediaUploadFailure('Chunk upload failed at offset $offset: ${resp.body}');
+          throw WikimediaUploadFailure(
+            'Chunk upload failed at offset $offset: ${resp.body}',
+          );
         }
 
         final data = jsonDecode(resp.body) as Map<String, dynamic>;
@@ -260,7 +279,8 @@ class WikimediaUploadService {
             progress: progressFraction,
             bytesSent: offset,
             totalBytes: totalBytes,
-            statusMessage: 'Uploading chunk: ${(offset / (1024 * 1024)).toStringAsFixed(1)}MB / ${(totalBytes / (1024 * 1024)).toStringAsFixed(1)}MB',
+            statusMessage:
+                'Uploading chunk: ${(offset / (1024 * 1024)).toStringAsFixed(1)}MB / ${(totalBytes / (1024 * 1024)).toStringAsFixed(1)}MB',
           ),
         );
       }
@@ -301,14 +321,20 @@ class WikimediaUploadService {
   }
 
   /// Parses MediaWiki upload API response and handles warnings/errors.
-  UploadProgressState _parseUploadResponse(String responseBody, String filename) {
+  UploadProgressState _parseUploadResponse(
+    String responseBody,
+    String filename,
+  ) {
     final data = jsonDecode(responseBody) as Map<String, dynamic>;
 
     if (data.containsKey('error')) {
       final err = data['error'] as Map<String, dynamic>;
       final code = err['code']?.toString() ?? 'UPLOAD_ERROR';
       final info = err['info']?.toString() ?? 'Unknown API error';
-      throw WikimediaUploadFailure('Wikimedia API Error ($code): $info', code: code);
+      throw WikimediaUploadFailure(
+        'Wikimedia API Error ($code): $info',
+        code: code,
+      );
     }
 
     final upload = data['upload'] as Map<String, dynamic>?;
@@ -344,7 +370,9 @@ class WikimediaUploadService {
         warnings: warnings,
       );
     } else {
-      throw WikimediaUploadFailure('Upload result status: $result\n$responseBody');
+      throw WikimediaUploadFailure(
+        'Upload result status: $result\n$responseBody',
+      );
     }
   }
 }

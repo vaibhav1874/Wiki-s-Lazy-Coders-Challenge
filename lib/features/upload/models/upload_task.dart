@@ -31,7 +31,10 @@ class UploadProgressState {
 
   bool get isCompleted => status == UploadStatus.completed;
   bool get isFailed => status == UploadStatus.failed;
-  bool get isUploading => status == UploadStatus.uploading || status == UploadStatus.fetchingToken || status == UploadStatus.verifying;
+  bool get isUploading =>
+      status == UploadStatus.uploading ||
+      status == UploadStatus.fetchingToken ||
+      status == UploadStatus.verifying;
 
   String get progressPercentage => '${(progress * 100).toInt()}%';
 }

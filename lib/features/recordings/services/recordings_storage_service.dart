@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -10,7 +11,7 @@ class RecordingsStorageService {
   final NativeCameraService _cameraService;
 
   RecordingsStorageService({NativeCameraService? cameraService})
-      : _cameraService = cameraService ?? NativeCameraService();
+    : _cameraService = cameraService ?? NativeCameraService();
 
   Future<Directory> getRecordingsDirectory() async {
     final docsDir = await getApplicationDocumentsDirectory();
@@ -78,10 +79,7 @@ class RecordingsStorageService {
   Future<void> shareRecording(String filePath) async {
     final xFile = XFile(filePath, mimeType: 'video/webm');
     await SharePlus.instance.share(
-      ShareParams(
-        files: [xFile],
-        text: 'Recorded with Wiki WebM Camera',
-      ),
+      ShareParams(files: [xFile], text: 'Recorded with Wiki WebM Camera'),
     );
   }
 }
