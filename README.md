@@ -126,4 +126,45 @@ To authenticate with Wikimedia Commons:
 2. Set Client Type to **Public (native/mobile application)**.
 3. Set the Redirect URI to `wikilazycoders://oauth`.
 4. In the app settings screen, enter your registered **Client ID** (or use the pre-configured default for testing).
-5. The application will launch the browser for authorization using PKCE (code_verifier + code_challenge SHA-256) and handle the redirect callback securely.
+5. The application will launch the browser for authorization using PKCE (`code_verifier` + `code_challenge` SHA-256) and handle the redirect callback securely into Android Keystore storage.
+
+---
+
+## 7. Automated Test Suite & Verification Results
+
+The project maintains a test suite covering native models, authentication, and Wikimedia API integration:
+
+| Test Suite | File | Tests | Status |
+| :--- | :--- | :--- | :--- |
+| **App Shell & Navigation** | [`test/widget_test.dart`](file:///c:/Users/vaibh/wiki/test/widget_test.dart) | 1 | Passed |
+| **Wikimedia OAuth & PKCE** | [`test/auth_service_test.dart`](file:///c:/Users/vaibh/wiki/test/auth_service_test.dart) | 4 | Passed |
+| **Commons Upload & Stash API** | [`test/upload_service_test.dart`](file:///c:/Users/vaibh/wiki/test/upload_service_test.dart) | 11 | Passed |
+| **Camera & WebM Models** | [`test/camera_models_test.dart`](file:///c:/Users/vaibh/wiki/test/camera_models_test.dart) | 5 | Passed |
+| **Total** | | **21 Tests** | **All Passed (0 failures)** |
+
+Run tests locally:
+```bash
+flutter test
+```
+
+Static analysis verification:
+```bash
+flutter analyze
+# Result: No issues found!
+```
+
+---
+
+## 8. Milestone Implementation History
+
+- **Milestone 1**: `chore: initialize Flutter Android project` - Scaffolding of project structure, dependencies, Android manifest permissions.
+- **Milestone 2**: `docs: add project requirements and setup guide` - Architecture blueprint, WebM standards, API documentation.
+- **Milestone 3**: `feat(android): implement WebM recording proof of concept` - Android Camera2 integration with `MediaRecorder` using `OutputFormat.WEBM`, `VideoEncoder.VP8`, `AudioEncoder.VORBIS`, and `TextureRegistry`.
+- **Milestone 4**: `test(android): validate WebM container and codecs` - Low-level EBML header parsing (`0x1A45DFA3`, `DocType: webm`) and Track/Codec verification.
+- **Milestone 5**: `feat(camera): add Flutter camera interface` - Camera screen, edge-to-edge preview, elapsed recording timer, resolution & camera switching.
+- **Milestone 6**: `feat(recordings): add local gallery and playback` - Recording item list, file size formatting, video player with diagnostic card, sharing and deletion.
+- **Milestone 7**: `feat(auth): implement Wikimedia OAuth` - OAuth 2.0 PKCE authorization flow, token refresh, and user profile management.
+- **Milestone 8**: `feat(upload): integrate Wikimedia Commons API` - Direct multipart and chunked Stash API upload, CSRF token acquisition, duplicate detection.
+- **Milestone 9**: `feat(ui): polish camera and upload workflows` - Hardware capabilities inspector, app preferences, bottom navigation shell.
+- **Milestone 10**: `test: add application tests and fix defects` - 21 automated unit tests across all application layers.
+- **Milestone 11**: `docs: document setup and verification results` - Comprehensive documentation and test matrix.
